@@ -35,7 +35,7 @@ function AuthPage() {
         await signIn(formData.email, formData.password);
         setSuccess('Successfully logged in! Redirecting...');
         setTimeout(() => {
-          navigate('/');
+          navigate('/content-blueprint');
         }, 1500);
       } else {
         await signUp(formData.email, formData.password, formData.name);
