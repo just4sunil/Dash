@@ -1,7 +1,35 @@
-import { Bot, ArrowRight, Zap, AlertCircle, TrendingDown, Clock, Users, Sparkles, Share2, MessageSquare, Target, Shield, CheckCircle2, Lightbulb } from 'lucide-react';
+import { Bot, ArrowRight, Zap, AlertCircle, TrendingDown, Clock, Users, Sparkles, Share2, MessageSquare, Target, Shield, CheckCircle2, Lightbulb, LogOut } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
+import { signOut } from '../lib/auth';
+import type { User } from '@supabase/supabase-js';
 
 function LandingPage() {
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
+  const displayName = user?.user_metadata?.display_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
       {/* Header */}
@@ -21,12 +49,29 @@ function LandingPage() {
           </nav>
 
           <div className="flex items-center gap-4">
-            <Link to="/auth" className="text-slate-700 hover:text-slate-900 font-medium transition-colors">
-              Sign In
-            </Link>
-            <Link to="/auth" className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium transition-all hover:shadow-lg hover:shadow-blue-600/30">
-              Get Started
-            </Link>
+            {user ? (
+              <>
+                <span className="text-slate-700 font-medium">
+                  Welcome, {displayName}
+                </span>
+                <button
+                  onClick={handleSignOut}
+                  className="flex items-center gap-2 text-slate-700 hover:text-slate-900 font-medium transition-colors"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Sign Out
+                </button>
+              </>
+            ) : (
+              <>
+                <Link to="/auth" className="text-slate-700 hover:text-slate-900 font-medium transition-colors">
+                  Sign In
+                </Link>
+                <Link to="/auth" className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium transition-all hover:shadow-lg hover:shadow-blue-600/30">
+                  Get Started
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </header>
