@@ -67,7 +67,7 @@ function LandingPage() {
                 <Link to="/auth" className="text-slate-700 hover:text-slate-900 font-medium transition-colors">
                   Sign In
                 </Link>
-                <Link to="/auth" className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium transition-all hover:shadow-lg hover:shadow-blue-600/30">
+                <Link to="/auth?mode=signup" className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium transition-all hover:shadow-lg hover:shadow-blue-600/30">
                   Get Started
                 </Link>
               </>
@@ -99,7 +99,7 @@ function LandingPage() {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
-            <Link to="/auth" className="group bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg font-semibold transition-all hover:shadow-xl hover:shadow-blue-600/30 flex items-center gap-2">
+            <Link to="/auth?mode=signup" className="group bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg font-semibold transition-all hover:shadow-xl hover:shadow-blue-600/30 flex items-center gap-2">
               Start Free Trial
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </Link>
@@ -378,7 +378,7 @@ function LandingPage() {
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
-            <Link to="/auth" className="group bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg font-semibold transition-all hover:shadow-xl hover:shadow-blue-600/30 flex items-center gap-2">
+            <Link to="/auth?mode=signup" className="group bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg font-semibold transition-all hover:shadow-xl hover:shadow-blue-600/30 flex items-center gap-2">
               Start Free Trial
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </Link>
