@@ -139,6 +139,32 @@ function ContentBlueprintPage() {
         throw new Error('User not authenticated');
       }
 
+      const webhookPayload = {
+        user_id: user.id,
+        email: user.email,
+        created_at: new Date().toISOString(),
+        idea: contentDraft.idea.trim(),
+        platform: contentDraft.platform,
+        format: contentDraft.format,
+        asset_source: contentDraft.format === 'Text Only' ? null : contentDraft.assetSource,
+        knowledge_base_file_name: contentDraft.knowledgeBaseFile?.name || null,
+        asset_file_name: contentDraft.assetFile?.name || null,
+      };
+
+      const webhookResponse = await fetch('https://myaistaff.app.n8n.cloud/webhook-test/PostBluePrint', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(webhookPayload),
+      });
+
+      if (!webhookResponse.ok) {
+        throw new Error(`Webhook request failed with status ${webhookResponse.status}`);
+      }
+
+      console.log('Webhook sent successfully');
+
       const draftData = {
         user_id: user.id,
         created_at: new Date().toISOString(),
@@ -150,8 +176,6 @@ function ContentBlueprintPage() {
         asset_file_name: contentDraft.assetFile?.name || null,
         status: 'draft_created',
       };
-
-      console.log('Content Draft Data:', draftData);
 
       const { data, error: insertError } = await supabase
         .from('content_drafts')
