@@ -28,6 +28,9 @@ function ContentBlueprintPage() {
   const [generatedText, setGeneratedText] = useState<string | null>(null);
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
   const [generatedVideoUrl, setGeneratedVideoUrl] = useState<string | null>(null);
+  const [userUploadedImageUrl, setUserUploadedImageUrl] = useState<string | null>(null);
+  const [userUploadedVideoUrl, setUserUploadedVideoUrl] = useState<string | null>(null);
+  const [isMediaReady, setIsMediaReady] = useState(false);
   const [webhookTimeout, setWebhookTimeout] = useState(false);
   const [testingWebhook, setTestingWebhook] = useState(false);
   const [uploadingFile, setUploadingFile] = useState(false);
@@ -161,14 +164,16 @@ function ContentBlueprintPage() {
       const publicUrl = publicUrlData.publicUrl;
 
       if (currentDraftId) {
-        const updateData: any = {};
+        const updateData: any = {
+          is_media_ready: false,
+        };
 
         if (format === 'Image + Text') {
-          updateData.generated_image_url = publicUrl;
-          setGeneratedImageUrl(publicUrl);
+          updateData.user_uploaded_image_url = publicUrl;
+          setUserUploadedImageUrl(publicUrl);
         } else if (format === 'Video Post') {
-          updateData.generated_video_url = publicUrl;
-          setGeneratedVideoUrl(publicUrl);
+          updateData.user_uploaded_video_url = publicUrl;
+          setUserUploadedVideoUrl(publicUrl);
         }
 
         const { error: updateError } = await supabase
@@ -183,9 +188,9 @@ function ContentBlueprintPage() {
         setSuccess(`${format === 'Image + Text' ? 'Image' : 'Video'} uploaded successfully and draft updated!`);
       } else {
         if (format === 'Image + Text') {
-          setGeneratedImageUrl(publicUrl);
+          setUserUploadedImageUrl(publicUrl);
         } else if (format === 'Video Post') {
-          setGeneratedVideoUrl(publicUrl);
+          setUserUploadedVideoUrl(publicUrl);
         }
         setSuccess(`${format === 'Image + Text' ? 'Image' : 'Video'} uploaded successfully! It will be saved when you generate the content draft.`);
       }
@@ -398,16 +403,18 @@ function ContentBlueprintPage() {
       const draftId = data[0]?.id;
       setCurrentDraftId(draftId);
 
-      if (contentDraft.assetSource === 'Upload My Own' && (generatedImageUrl || generatedVideoUrl)) {
-        const initialUpdateData: any = {};
-        if (contentDraft.format === 'Image + Text' && generatedImageUrl) {
-          initialUpdateData.generated_image_url = generatedImageUrl;
+      if (contentDraft.assetSource === 'Upload My Own' && (userUploadedImageUrl || userUploadedVideoUrl)) {
+        const initialUpdateData: any = {
+          is_media_ready: false,
+        };
+        if (contentDraft.format === 'Image + Text' && userUploadedImageUrl) {
+          initialUpdateData.user_uploaded_image_url = userUploadedImageUrl;
         }
-        if (contentDraft.format === 'Video Post' && generatedVideoUrl) {
-          initialUpdateData.generated_video_url = generatedVideoUrl;
+        if (contentDraft.format === 'Video Post' && userUploadedVideoUrl) {
+          initialUpdateData.user_uploaded_video_url = userUploadedVideoUrl;
         }
 
-        if (Object.keys(initialUpdateData).length > 0) {
+        if (Object.keys(initialUpdateData).length > 1) {
           await supabase
             .from('content_drafts')
             .update(initialUpdateData)
@@ -910,7 +917,7 @@ function ContentBlueprintPage() {
               </div>
             )}
 
-            {!waitingForWebhook && (generatedText || generatedImageUrl || generatedVideoUrl) && (
+            {!waitingForWebhook && (generatedText || generatedImageUrl || generatedVideoUrl || userUploadedImageUrl || userUploadedVideoUrl) && (
               <div className="bg-white rounded-2xl shadow-xl border border-green-200 overflow-hidden">
                 <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-200 p-6">
                   <div className="flex items-center gap-3">
@@ -935,7 +942,41 @@ function ContentBlueprintPage() {
                     </div>
                   )}
 
-                  {generatedImageUrl && (
+                  {userUploadedImageUrl && isMediaReady && (
+                    <div>
+                      <div className="flex items-center gap-2 mb-3">
+                        <Upload className="w-5 h-5 text-blue-600" />
+                        <p className="text-sm font-semibold text-slate-700">User Uploaded Image</p>
+                      </div>
+                      <div className="rounded-xl overflow-hidden border border-slate-200 shadow-lg">
+                        <img
+                          src={userUploadedImageUrl}
+                          alt="User uploaded content"
+                          className="w-full h-auto"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                            console.error('Failed to load image:', userUploadedImageUrl);
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {userUploadedImageUrl && !isMediaReady && (
+                    <div>
+                      <div className="flex items-center gap-2 mb-3">
+                        <Upload className="w-5 h-5 text-blue-600" />
+                        <p className="text-sm font-semibold text-slate-700">User Uploaded Image</p>
+                      </div>
+                      <div className="rounded-xl border border-slate-200 bg-slate-50 p-12 text-center">
+                        <Loader2 className="w-12 h-12 text-blue-600 animate-spin mx-auto mb-4" />
+                        <p className="text-slate-700 font-semibold mb-2">Media is processing</p>
+                        <p className="text-slate-500 text-sm">Your uploaded image is being processed. Please wait...</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {!userUploadedImageUrl && generatedImageUrl && (
                     <div>
                       <div className="flex items-center gap-2 mb-3">
                         <Upload className="w-5 h-5 text-blue-600" />
@@ -955,7 +996,43 @@ function ContentBlueprintPage() {
                     </div>
                   )}
 
-                  {generatedVideoUrl && (
+                  {userUploadedVideoUrl && isMediaReady && (
+                    <div>
+                      <div className="flex items-center gap-2 mb-3">
+                        <Upload className="w-5 h-5 text-blue-600" />
+                        <p className="text-sm font-semibold text-slate-700">User Uploaded Video</p>
+                      </div>
+                      <div className="rounded-xl overflow-hidden border border-slate-200 shadow-lg">
+                        <video
+                          src={userUploadedVideoUrl}
+                          controls
+                          className="w-full h-auto"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                            console.error('Failed to load video:', userUploadedVideoUrl);
+                          }}
+                        >
+                          Your browser does not support the video tag.
+                        </video>
+                      </div>
+                    </div>
+                  )}
+
+                  {userUploadedVideoUrl && !isMediaReady && (
+                    <div>
+                      <div className="flex items-center gap-2 mb-3">
+                        <Upload className="w-5 h-5 text-blue-600" />
+                        <p className="text-sm font-semibold text-slate-700">User Uploaded Video</p>
+                      </div>
+                      <div className="rounded-xl border border-slate-200 bg-slate-50 p-12 text-center">
+                        <Loader2 className="w-12 h-12 text-blue-600 animate-spin mx-auto mb-4" />
+                        <p className="text-slate-700 font-semibold mb-2">Media is processing</p>
+                        <p className="text-slate-500 text-sm">Your uploaded video is being processed. Please wait...</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {!userUploadedVideoUrl && generatedVideoUrl && (
                     <div>
                       <div className="flex items-center gap-2 mb-3">
                         <Upload className="w-5 h-5 text-blue-600" />
@@ -983,6 +1060,9 @@ function ContentBlueprintPage() {
                         setGeneratedText(null);
                         setGeneratedImageUrl(null);
                         setGeneratedVideoUrl(null);
+                        setUserUploadedImageUrl(null);
+                        setUserUploadedVideoUrl(null);
+                        setIsMediaReady(false);
                         setSuccess(null);
                       }}
                       className="flex-1 px-6 py-3 bg-white border-2 border-slate-300 text-slate-700 rounded-lg font-semibold hover:bg-slate-50 hover:border-slate-400 transition-all"

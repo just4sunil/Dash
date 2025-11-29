@@ -16,6 +16,9 @@ interface ContentDraft {
   generated_text: string | null;
   generated_image_url: string | null;
   generated_video_url: string | null;
+  user_uploaded_image_url: string | null;
+  user_uploaded_video_url: string | null;
+  is_media_ready: boolean;
   generated_at: string | null;
 }
 
@@ -155,6 +158,9 @@ function ContentReviewPage() {
   const contentText = latestDraft?.generated_text || '';
   const imageUrl = latestDraft?.generated_image_url || '';
   const videoUrl = latestDraft?.generated_video_url || '';
+  const userUploadedImageUrl = latestDraft?.user_uploaded_image_url || '';
+  const userUploadedVideoUrl = latestDraft?.user_uploaded_video_url || '';
+  const isMediaReady = latestDraft?.is_media_ready || false;
   const platform = latestDraft?.platform || '';
 
   return (
@@ -223,7 +229,7 @@ function ContentReviewPage() {
                   </div>
                 )}
 
-                {!contentText && !imageUrl && !videoUrl && latestDraft?.status === 'draft_created' && (
+                {!contentText && !imageUrl && !videoUrl && !userUploadedImageUrl && !userUploadedVideoUrl && latestDraft?.status === 'draft_created' && (
                   <div className="text-center py-12 bg-yellow-50 rounded-xl border border-yellow-200">
                     <Loader2 className="w-12 h-12 text-yellow-600 animate-spin mx-auto mb-4" />
                     <p className="text-yellow-900 text-lg font-semibold mb-2">Content is being generated</p>
@@ -238,7 +244,35 @@ function ContentReviewPage() {
                   </div>
                 )}
 
-                {imageUrl && (
+                {userUploadedImageUrl && isMediaReady && (
+                  <div>
+                    <p className="text-sm font-semibold text-slate-700 mb-4">User Uploaded Image</p>
+                    <div className="rounded-xl overflow-hidden border border-slate-200 shadow-lg">
+                      <img
+                        src={userUploadedImageUrl}
+                        alt="User uploaded content"
+                        className="w-full h-auto"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                          console.error('Failed to load image:', userUploadedImageUrl);
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {userUploadedImageUrl && !isMediaReady && (
+                  <div>
+                    <p className="text-sm font-semibold text-slate-700 mb-4">User Uploaded Image</p>
+                    <div className="rounded-xl border border-slate-200 bg-slate-50 p-12 text-center">
+                      <Loader2 className="w-12 h-12 text-blue-600 animate-spin mx-auto mb-4" />
+                      <p className="text-slate-700 font-semibold mb-2">Media is processing</p>
+                      <p className="text-slate-500 text-sm">Your uploaded image is being processed. Please wait...</p>
+                    </div>
+                  </div>
+                )}
+
+                {!userUploadedImageUrl && imageUrl && (
                   <div>
                     <p className="text-sm font-semibold text-slate-700 mb-4">Generated Image</p>
                     <div className="rounded-xl overflow-hidden border border-slate-200 shadow-lg">
@@ -255,7 +289,37 @@ function ContentReviewPage() {
                   </div>
                 )}
 
-                {videoUrl && (
+                {userUploadedVideoUrl && isMediaReady && (
+                  <div>
+                    <p className="text-sm font-semibold text-slate-700 mb-4">User Uploaded Video</p>
+                    <div className="rounded-xl overflow-hidden border border-slate-200 shadow-lg">
+                      <video
+                        src={userUploadedVideoUrl}
+                        controls
+                        className="w-full h-auto"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                          console.error('Failed to load video:', userUploadedVideoUrl);
+                        }}
+                      >
+                        Your browser does not support the video tag.
+                      </video>
+                    </div>
+                  </div>
+                )}
+
+                {userUploadedVideoUrl && !isMediaReady && (
+                  <div>
+                    <p className="text-sm font-semibold text-slate-700 mb-4">User Uploaded Video</p>
+                    <div className="rounded-xl border border-slate-200 bg-slate-50 p-12 text-center">
+                      <Loader2 className="w-12 h-12 text-blue-600 animate-spin mx-auto mb-4" />
+                      <p className="text-slate-700 font-semibold mb-2">Media is processing</p>
+                      <p className="text-slate-500 text-sm">Your uploaded video is being processed. Please wait...</p>
+                    </div>
+                  </div>
+                )}
+
+                {!userUploadedVideoUrl && videoUrl && (
                   <div>
                     <p className="text-sm font-semibold text-slate-700 mb-4">Generated Video</p>
                     <div className="rounded-xl overflow-hidden border border-slate-200 shadow-lg">
@@ -297,7 +361,7 @@ function ContentReviewPage() {
                 )}
               </div>
 
-              {(contentText || imageUrl || videoUrl) && (
+              {(contentText || imageUrl || videoUrl || userUploadedImageUrl || userUploadedVideoUrl) && (
                 <div className="p-8 bg-slate-50 border-t border-slate-200">
                   <div className="grid grid-cols-2 gap-4">
                     <button
