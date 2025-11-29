@@ -515,6 +515,10 @@ function ContentBlueprintPage() {
                 status: 'content_generated',
               };
 
+              if (contentDraft.assetSource === 'Upload My Own') {
+                updateData.is_media_ready = true;
+              }
+
               if (contentDraft.format === 'Image + Text') {
                 updateData.generated_image_url = extractedImageUrl;
               }
@@ -535,6 +539,9 @@ function ContentBlueprintPage() {
                 console.error('❌ DATABASE UPDATE FAILED:', updateError);
               } else {
                 console.log('✅ DATABASE UPDATE SUCCESS:', updateResult);
+                if (contentDraft.assetSource === 'Upload My Own' && updateResult && updateResult[0]) {
+                  setIsMediaReady(true);
+                }
               }
             } else {
               console.warn('⚠️ No generated content found in webhook response - database not updated');
