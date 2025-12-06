@@ -215,37 +215,33 @@ export default function LandingPage() {
             <div className="absolute -inset-4 bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 rounded-3xl blur-2xl opacity-20" />
             <div className="relative bg-white/50 backdrop-blur-sm rounded-3xl p-4 shadow-2xl border border-gray-200">
               <div className="relative w-full aspect-video bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl overflow-hidden">
-                {!isVideoPlaying && (
-                  <>
-                    <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 via-pink-500/10 to-purple-500/10" />
-                    <svg
-                      className="w-full h-full opacity-10"
-                      viewBox="0 0 800 450"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <line x1="0" y1="0" x2="800" y2="450" stroke="#9CA3AF" strokeWidth="2" />
-                      <line x1="800" y1="0" x2="0" y2="450" stroke="#9CA3AF" strokeWidth="2" />
-                    </svg>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="text-center">
-                        <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-orange-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-xl animate-pulse-slow">
-                          <Sparkles className="w-10 h-10 text-white" />
-                        </div>
-                        <p className="text-gray-700 text-lg font-semibold">Platform Preview</p>
-                      </div>
-                    </div>
-                  </>
-                )}
                 <video
                   ref={videoRef}
-                  className={`w-full h-full object-cover rounded-2xl ${isVideoPlaying ? 'block' : 'hidden'}`}
-                  controls
+                  className="w-full h-full object-cover rounded-2xl"
+                  poster="https://ntetahapqyfjomzdhayn.supabase.co/storage/v1/object/public/ai-videos/ProductIntro.mp4#t=0.1"
+                  controls={isVideoPlaying}
                   onEnded={() => setIsVideoPlaying(false)}
+                  preload="metadata"
                 >
                   <source src="https://ntetahapqyfjomzdhayn.supabase.co/storage/v1/object/public/ai-videos/ProductIntro.mp4" type="video/mp4" />
                   Your browser does not support the video tag.
                 </video>
+                {!isVideoPlaying && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+                    <div className="text-center">
+                      <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-orange-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-xl hover:scale-110 transition-transform cursor-pointer" onClick={handleWatchDemo}>
+                        <svg
+                          className="w-10 h-10 text-white ml-1"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+                        </svg>
+                      </div>
+                      <p className="text-white text-lg font-semibold">Watch Product Demo</p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
