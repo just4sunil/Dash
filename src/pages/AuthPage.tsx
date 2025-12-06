@@ -58,25 +58,25 @@ function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50 flex items-center justify-center p-6">
       <div className="w-full max-w-md">
         {/* Logo */}
-        <Link to="/" className="flex items-center justify-center gap-2 mb-8">
-          <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-600/30">
+        <Link to="/" className="flex items-center justify-center gap-2 mb-8 hover:scale-105 transition-transform">
+          <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg shadow-orange-500/30">
             <Bot className="w-7 h-7 text-white" />
           </div>
-          <span className="text-3xl font-bold text-slate-900">Dash.ai</span>
+          <span className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent">Dash.ai</span>
         </Link>
 
         {/* Auth Card */}
-        <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-8">
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-orange-100 p-8">
           {/* Tabs */}
-          <div className="flex gap-2 mb-8 bg-slate-100 p-1.5 rounded-lg">
+          <div className="flex gap-2 mb-8 bg-gradient-to-r from-orange-50 to-pink-50 p-1.5 rounded-xl">
             <button
               onClick={() => setIsLogin(true)}
-              className={`flex-1 py-2.5 px-4 rounded-md font-semibold transition-all ${
+              className={`flex-1 py-2.5 px-4 rounded-lg font-semibold transition-all ${
                 isLogin
-                  ? 'bg-white text-blue-600 shadow-sm'
+                  ? 'bg-white text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-pink-600 shadow-md'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
@@ -84,9 +84,9 @@ function AuthPage() {
             </button>
             <button
               onClick={() => setIsLogin(false)}
-              className={`flex-1 py-2.5 px-4 rounded-md font-semibold transition-all ${
+              className={`flex-1 py-2.5 px-4 rounded-lg font-semibold transition-all ${
                 !isLogin
-                  ? 'bg-white text-blue-600 shadow-sm'
+                  ? 'bg-white text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-pink-600 shadow-md'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
@@ -140,7 +140,7 @@ function AuthPage() {
                     name="name"
                     value={formData.name}
                     onChange={handleInputChange}
-                    className="w-full pl-12 pr-4 py-3.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition-all text-slate-900 placeholder:text-slate-400"
+                    className="w-full pl-12 pr-4 py-3.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition-all text-slate-900 placeholder:text-slate-400"
                     placeholder="John Doe"
                     required={!isLogin}
                   />
@@ -163,7 +163,7 @@ function AuthPage() {
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className="w-full pl-12 pr-4 py-3.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition-all text-slate-900 placeholder:text-slate-400"
+                  className="w-full pl-12 pr-4 py-3.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition-all text-slate-900 placeholder:text-slate-400"
                   placeholder="you@example.com"
                   required
                 />
@@ -185,7 +185,7 @@ function AuthPage() {
                   name="password"
                   value={formData.password}
                   onChange={handleInputChange}
-                  className="w-full pl-12 pr-12 py-3.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition-all text-slate-900 placeholder:text-slate-400"
+                  className="w-full pl-12 pr-12 py-3.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition-all text-slate-900 placeholder:text-slate-400"
                   placeholder="••••••••"
                   required
                 />
@@ -206,7 +206,7 @@ function AuthPage() {
             {/* Forgot Password - Only for Login */}
             {isLogin && (
               <div className="flex items-center justify-end">
-                <a href="#" className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors">
+                <a href="#" className="text-sm font-medium bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent hover:from-orange-700 hover:to-pink-700 transition-all">
                   Forgot password?
                 </a>
               </div>
@@ -218,16 +218,16 @@ function AuthPage() {
                 <input
                   type="checkbox"
                   id="terms"
-                  className="mt-1 w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-2 focus:ring-blue-600"
+                  className="mt-1 w-4 h-4 text-orange-600 border-slate-300 rounded focus:ring-2 focus:ring-orange-500"
                   required
                 />
                 <label htmlFor="terms" className="text-sm text-slate-600">
                   I agree to the{' '}
-                  <a href="#" className="text-blue-600 hover:text-blue-700 font-medium">
+                  <a href="#" className="bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent hover:from-orange-700 hover:to-pink-700 font-medium">
                     Terms of Service
                   </a>{' '}
                   and{' '}
-                  <a href="#" className="text-blue-600 hover:text-blue-700 font-medium">
+                  <a href="#" className="bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent hover:from-orange-700 hover:to-pink-700 font-medium">
                     Privacy Policy
                   </a>
                 </label>
@@ -238,7 +238,7 @@ function AuthPage() {
             <button
               type="submit"
               disabled={loading}
-              className="group w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white py-3.5 rounded-lg font-semibold transition-all hover:shadow-lg hover:shadow-blue-600/30 flex items-center justify-center gap-2 mt-6"
+              className="group w-full bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 disabled:from-orange-300 disabled:to-pink-300 disabled:cursor-not-allowed text-white py-3.5 rounded-lg font-semibold transition-all hover:shadow-lg hover:shadow-orange-500/40 flex items-center justify-center gap-2 mt-6"
             >
               {loading ? (
                 <>
@@ -266,7 +266,7 @@ function AuthPage() {
 
           {/* Social Login Buttons */}
           <div className="grid grid-cols-2 gap-4">
-            <button className="flex items-center justify-center gap-2 py-3 px-4 border-2 border-slate-200 rounded-lg hover:bg-slate-50 hover:border-slate-300 transition-all font-medium text-slate-700">
+            <button className="flex items-center justify-center gap-2 py-3 px-4 border-2 border-orange-100 rounded-lg hover:bg-gradient-to-r hover:from-orange-50 hover:to-pink-50 hover:border-orange-200 transition-all font-medium text-slate-700 hover:text-slate-900">
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path
                   fill="currentColor"
@@ -287,7 +287,7 @@ function AuthPage() {
               </svg>
               Google
             </button>
-            <button className="flex items-center justify-center gap-2 py-3 px-4 border-2 border-slate-200 rounded-lg hover:bg-slate-50 hover:border-slate-300 transition-all font-medium text-slate-700">
+            <button className="flex items-center justify-center gap-2 py-3 px-4 border-2 border-orange-100 rounded-lg hover:bg-gradient-to-r hover:from-orange-50 hover:to-pink-50 hover:border-orange-200 transition-all font-medium text-slate-700 hover:text-slate-900">
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
               </svg>
@@ -298,8 +298,8 @@ function AuthPage() {
 
         {/* Back to Home */}
         <div className="text-center mt-8">
-          <Link to="/" className="text-slate-600 hover:text-slate-900 transition-colors font-medium inline-flex items-center gap-2">
-            <ArrowRight className="w-4 h-4 rotate-180" />
+          <Link to="/" className="text-slate-600 hover:bg-gradient-to-r hover:from-orange-600 hover:to-pink-600 hover:bg-clip-text hover:text-transparent transition-all font-medium inline-flex items-center gap-2 group">
+            <ArrowRight className="w-4 h-4 rotate-180 group-hover:-translate-x-1 transition-transform" />
             Back to Home
           </Link>
         </div>
