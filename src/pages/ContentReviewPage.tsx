@@ -78,28 +78,39 @@ function ContentReviewPage() {
     setSuccessMessage(null);
 
     try {
-      const { error: updateError } = await supabase
+      console.log('Approving content draft:', latestDraft.id);
+      console.log('Current user:', user?.id);
+
+      const { data, error: updateError } = await supabase
         .from('content_drafts')
         .update({ status: 'content_generated_approved' })
-        .eq('id', latestDraft.id);
+        .eq('id', latestDraft.id)
+        .select();
+
+      console.log('Update response:', { data, error: updateError });
 
       if (updateError) {
+        console.error('Database update error:', updateError);
         throw updateError;
       }
 
       setSuccessMessage('The approval has been registered in the database successfully!');
 
-      const webhookPayload = {
-        draft_id: latestDraft.id,
-      };
+      try {
+        const webhookPayload = {
+          draft_id: latestDraft.id,
+        };
 
-      await fetch('https://myaistaff.app.n8n.cloud/webhook-test/Approved', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(webhookPayload),
-      });
+        await fetch('https://myaistaff.app.n8n.cloud/webhook-test/Approved', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(webhookPayload),
+        });
+      } catch (webhookErr) {
+        console.error('Webhook call failed (non-critical):', webhookErr);
+      }
 
       setTimeout(() => {
         navigate('/content-blueprint');
@@ -120,12 +131,19 @@ function ContentReviewPage() {
     setSuccessMessage(null);
 
     try {
-      const { error: updateError } = await supabase
+      console.log('Rejecting content draft:', latestDraft.id);
+      console.log('Current user:', user?.id);
+
+      const { data, error: updateError } = await supabase
         .from('content_drafts')
         .update({ status: 'content_generated_Rejected' })
-        .eq('id', latestDraft.id);
+        .eq('id', latestDraft.id)
+        .select();
+
+      console.log('Update response:', { data, error: updateError });
 
       if (updateError) {
+        console.error('Database update error:', updateError);
         throw updateError;
       }
 
