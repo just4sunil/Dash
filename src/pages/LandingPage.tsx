@@ -63,7 +63,7 @@ export default function LandingPage() {
       title: 'Customer Support',
       description: 'Provide instant, 24/7 support with AI assistants. Keep every conversation context-aware and personalized.',
       gradient: 'from-purple-500 to-orange-400',
-      onClick: undefined,
+      onClick: () => window.open('https://exclusive-urban-fash-qh61.bolt.host/', '_blank'),
     },
   ];
 
