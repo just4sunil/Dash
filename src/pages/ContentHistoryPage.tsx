@@ -1,83 +1,114 @@
-import { useState, useEffect } from 'react';
-import { Search, ChevronDown, ChevronUp, Sparkles, Calendar, Filter } from 'lucide-react';
+import { useState } from 'react';
+import { Search, Calendar, Filter, Sparkles, CheckCircle, Upload, Loader2 } from 'lucide-react';
 import { Sidebar } from '../components/Sidebar';
-import { getApprovedCampaigns, searchCampaignsByName } from '../lib/campaignService';
-import type { CampaignWithContent, Platform } from '../lib/campaignService';
+import { supabase } from '../lib/supabase';
+import { useAuth } from '../lib/authContext';
+import { VideoModal } from '../components/VideoModal';
+
+interface ContentDraft {
+  id: string;
+  user_id: string;
+  created_at: string;
+  campaign_name: string;
+  campaign_id: string;
+  idea: string;
+  platform: string;
+  format: string;
+  asset_source: string | null;
+  generated_text: string | null;
+  generated_image_url: string | null;
+  generated_video_url: string | null;
+  user_uploaded_image_url: string | null;
+  user_uploaded_video_url: string | null;
+  status: string;
+  is_media_ready: boolean | null;
+}
 
 function ContentHistoryPage() {
-  const [campaigns, setCampaigns] = useState<CampaignWithContent[]>([]);
-  const [allCampaigns, setAllCampaigns] = useState<CampaignWithContent[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
+  const { user } = useAuth();
+  const [drafts, setDrafts] = useState<ContentDraft[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedDraftId, setSelectedDraftId] = useState<string | null>(null);
+  const [isPosting, setIsPosting] = useState(false);
+  const [videoModalUrl, setVideoModalUrl] = useState<string | null>(null);
+
+  const [campaignName, setCampaignName] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [isLoading, setIsLoading] = useState(true);
-  const [expandedRow, setExpandedRow] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadCampaigns();
-  }, []);
-
-  const loadCampaigns = async () => {
-    try {
-      setIsLoading(true);
-      const data = await getApprovedCampaigns();
-      setCampaigns(data);
-      setAllCampaigns(data);
-    } catch (error) {
-      console.error('Error loading campaigns:', error);
-      alert('Error loading campaigns. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleSearch = async () => {
-    if (!searchTerm.trim()) {
-      loadCampaigns();
+  const applyFilters = async () => {
+    if (!user?.id) {
+      alert('Please sign in to view content history');
       return;
     }
 
+    setIsLoading(true);
     try {
-      setIsLoading(true);
-      const data = await searchCampaignsByName(searchTerm);
-      setCampaigns(data);
-      setAllCampaigns(data);
-    } catch (error) {
-      console.error('Error searching campaigns:', error);
-      alert('Error searching campaigns. Please try again.');
+      let query = supabase
+        .from('content_drafts')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (campaignName.trim()) {
+        query = query.ilike('campaign_name', `%${campaignName.trim()}%`);
+      }
+
+      if (startDate) {
+        query = query.gte('created_at', new Date(startDate).toISOString());
+      }
+
+      if (endDate) {
+        const endDateTime = new Date(endDate);
+        endDateTime.setHours(23, 59, 59, 999);
+        query = query.lte('created_at', endDateTime.toISOString());
+      }
+
+      if (statusFilter !== 'all') {
+        query = query.eq('status', statusFilter);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        throw error;
+      }
+
+      setDrafts(data || []);
+      setSelectedDraftId(null);
+    } catch (error: any) {
+      console.error('Error fetching drafts:', error);
+      alert('Error loading content drafts: ' + error.message);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const applyFilters = () => {
-    let filtered = [...allCampaigns];
-
-    if (startDate) {
-      const start = new Date(startDate);
-      filtered = filtered.filter(campaign => new Date(campaign.created_at) >= start);
-    }
-
-    if (endDate) {
-      const end = new Date(endDate);
-      end.setHours(23, 59, 59, 999);
-      filtered = filtered.filter(campaign => new Date(campaign.created_at) <= end);
-    }
-
-    if (statusFilter !== 'all') {
-      filtered = filtered.filter(campaign => campaign.status === statusFilter);
-    }
-
-    setCampaigns(filtered);
-  };
-
   const handleReset = () => {
-    setSearchTerm('');
+    setCampaignName('');
     setStartDate('');
     setEndDate('');
     setStatusFilter('all');
-    loadCampaigns();
+    setDrafts([]);
+    setSelectedDraftId(null);
+  };
+
+  const handlePostContent = async () => {
+    if (!selectedDraftId) return;
+
+    const selectedDraft = drafts.find(d => d.id === selectedDraftId);
+    if (!selectedDraft) return;
+
+    setIsPosting(true);
+    try {
+      alert(`Posting content to ${selectedDraft.platform}!\n\nDraft ID: ${selectedDraft.id}\nCampaign: ${selectedDraft.campaign_name}\n\nThis functionality can be integrated with your posting API.`);
+    } catch (error: any) {
+      console.error('Error posting content:', error);
+      alert('Error posting content: ' + error.message);
+    } finally {
+      setIsPosting(false);
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -91,22 +122,31 @@ function ContentHistoryPage() {
     });
   };
 
-  const getPlatformLabel = (platform: Platform) => {
-    switch (platform) {
-      case 'facebook': return 'Facebook';
-      case 'x': return 'X';
-      case 'instagram': return 'Instagram';
+  const getMediaUrl = (draft: ContentDraft) => {
+    if (draft.user_uploaded_image_url) return draft.user_uploaded_image_url;
+    if (draft.user_uploaded_video_url) return draft.user_uploaded_video_url;
+    if (draft.generated_image_url) return draft.generated_image_url;
+    if (draft.generated_video_url) return draft.generated_video_url;
+    return null;
+  };
+
+  const isVideo = (draft: ContentDraft) => {
+    return !!(draft.user_uploaded_video_url || draft.generated_video_url);
+  };
+
+  const getStatusBadgeClass = (status: string) => {
+    switch (status) {
+      case 'content_generated':
+        return 'bg-gradient-to-r from-green-400 to-emerald-500';
+      case 'draft_created':
+        return 'bg-gradient-to-r from-blue-400 to-blue-500';
+      case 'posted':
+        return 'bg-gradient-to-r from-purple-400 to-purple-500';
+      case 'failed':
+        return 'bg-gradient-to-r from-red-400 to-red-500';
+      default:
+        return 'bg-gradient-to-r from-gray-400 to-gray-500';
     }
-  };
-
-  const getPlatformsList = (campaign: CampaignWithContent) => {
-    return campaign.campaign_content
-      .map(content => getPlatformLabel(content.platform))
-      .join(', ');
-  };
-
-  const toggleRowExpansion = (campaignId: string) => {
-    setExpandedRow(expandedRow === campaignId ? null : campaignId);
   };
 
   return (
@@ -125,7 +165,7 @@ function ContentHistoryPage() {
               <Sparkles className="w-10 h-10 text-orange-500" />
               Content History
             </h1>
-            <p className="text-gray-600 text-lg">View and manage all your approved campaigns</p>
+            <p className="text-gray-600 text-lg">Search, filter, and manage your content drafts</p>
           </div>
 
           <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl p-6 mb-6 border border-white/50 space-y-4">
@@ -133,26 +173,14 @@ function ContentHistoryPage() {
               <div className="flex-1 relative">
                 <input
                   type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                  value={campaignName}
+                  onChange={(e) => setCampaignName(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && applyFilters()}
                   placeholder="Search by Campaign Name"
                   className="w-full px-4 py-3 pl-12 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
                 />
                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
               </div>
-              <button
-                onClick={handleSearch}
-                className="px-8 py-3 bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white font-semibold rounded-xl transition-all transform hover:scale-105 hover:shadow-lg"
-              >
-                Search
-              </button>
-              <button
-                onClick={handleReset}
-                className="px-8 py-3 bg-gray-700 hover:bg-gray-800 text-white font-semibold rounded-xl transition-all transform hover:scale-105 hover:shadow-lg"
-              >
-                Reset
-              </button>
             </div>
 
             <div className="flex gap-4">
@@ -193,30 +221,57 @@ function ContentHistoryPage() {
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all appearance-none cursor-pointer bg-white"
                 >
                   <option value="all">All Status</option>
-                  <option value="approved">Approved</option>
-                  <option value="draft">Draft</option>
-                  <option value="pending">Pending</option>
+                  <option value="draft_created">Draft Created</option>
+                  <option value="content_generated">Content Generated</option>
+                  <option value="posted">Posted</option>
+                  <option value="failed">Failed</option>
                 </select>
               </div>
-              <div className="flex items-end">
-                <button
-                  onClick={applyFilters}
-                  className="px-8 py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold rounded-xl transition-all transform hover:scale-105 hover:shadow-lg whitespace-nowrap"
-                >
-                  Apply Filters
-                </button>
-              </div>
+            </div>
+
+            <div className="flex gap-4 pt-2">
+              <button
+                onClick={applyFilters}
+                disabled={isLoading}
+                className="flex-1 px-8 py-3 bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 disabled:from-gray-400 disabled:to-gray-400 text-white font-semibold rounded-xl transition-all transform hover:scale-105 hover:shadow-lg disabled:transform-none disabled:cursor-not-allowed"
+              >
+                {isLoading ? 'Searching...' : 'Apply Filters'}
+              </button>
+              <button
+                onClick={handleReset}
+                className="px-8 py-3 bg-gray-700 hover:bg-gray-800 text-white font-semibold rounded-xl transition-all transform hover:scale-105 hover:shadow-lg"
+              >
+                Reset
+              </button>
+              <button
+                onClick={handlePostContent}
+                disabled={!selectedDraftId || isPosting}
+                className="px-8 py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 disabled:from-gray-300 disabled:to-gray-300 text-white font-semibold rounded-xl transition-all transform hover:scale-105 hover:shadow-lg disabled:transform-none disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {isPosting ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Posting...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle className="w-5 h-5" />
+                    Post Content
+                  </>
+                )}
+              </button>
             </div>
           </div>
 
           {isLoading ? (
             <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl p-12 text-center border border-white/50">
-              <div className="text-xl text-gray-600">Loading campaigns...</div>
+              <Loader2 className="w-12 h-12 text-orange-500 animate-spin mx-auto mb-4" />
+              <div className="text-xl text-gray-600">Loading content drafts...</div>
             </div>
-          ) : campaigns.length === 0 ? (
+          ) : drafts.length === 0 ? (
             <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl p-12 text-center border border-white/50">
               <div className="text-xl text-gray-600">
-                {searchTerm ? 'No campaigns found matching your search.' : 'No approved campaigns yet.'}
+                No content drafts found. Click "Apply Filters" to search or adjust your filters.
               </div>
             </div>
           ) : (
@@ -225,127 +280,124 @@ function ContentHistoryPage() {
                 <table className="w-full">
                   <thead className="bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 text-white">
                     <tr>
-                      <th className="px-6 py-4 text-left font-semibold">Campaign ID</th>
+                      <th className="px-6 py-4 text-center font-semibold">Select</th>
                       <th className="px-6 py-4 text-left font-semibold">Campaign Name</th>
-                      <th className="px-6 py-4 text-left font-semibold">Creation Date</th>
-                      <th className="px-6 py-4 text-left font-semibold">Platforms</th>
-                      <th className="px-6 py-4 text-left font-semibold">Status</th>
-                      <th className="px-6 py-4 text-center font-semibold">Details</th>
+                      <th className="px-6 py-4 text-left font-semibold">Generated Text</th>
+                      <th className="px-6 py-4 text-center font-semibold">Media Preview</th>
+                      <th className="px-6 py-4 text-center font-semibold">Platform</th>
+                      <th className="px-6 py-4 text-center font-semibold">Status</th>
+                      <th className="px-6 py-4 text-center font-semibold">Date</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
-                    {campaigns.map((campaign) => (
-                      <>
+                    {drafts.map((draft) => {
+                      const mediaUrl = getMediaUrl(draft);
+                      const isVideoContent = isVideo(draft);
+
+                      return (
                         <tr
-                          key={campaign.id}
-                          className="hover:bg-orange-50/50 transition-colors"
+                          key={draft.id}
+                          className={`hover:bg-orange-50/50 transition-colors ${
+                            selectedDraftId === draft.id ? 'bg-orange-100/70' : ''
+                          }`}
                         >
-                          <td className="px-6 py-4 text-gray-600 font-mono text-xs">
-                            {campaign.id.substring(0, 8)}...
-                          </td>
-                          <td className="px-6 py-4 font-semibold text-gray-900">
-                            {campaign.campaign_name}
-                          </td>
-                          <td className="px-6 py-4 text-gray-600">
-                            {formatDate(campaign.created_at)}
-                          </td>
-                          <td className="px-6 py-4 text-gray-600">
-                            {getPlatformsList(campaign)}
+                          <td className="px-6 py-4 text-center">
+                            <input
+                              type="radio"
+                              name="selectedDraft"
+                              checked={selectedDraftId === draft.id}
+                              onChange={() => setSelectedDraftId(draft.id)}
+                              className="w-5 h-5 text-orange-500 cursor-pointer focus:ring-2 focus:ring-orange-500"
+                            />
                           </td>
                           <td className="px-6 py-4">
-                            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-gradient-to-r from-green-400 to-emerald-500 text-white shadow-sm">
-                              {campaign.status.charAt(0).toUpperCase() + campaign.status.slice(1)}
+                            <div className="font-semibold text-gray-900">{draft.campaign_name}</div>
+                            <div className="text-xs text-gray-500 mt-1">{draft.idea.substring(0, 60)}...</div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="max-w-md">
+                              {draft.generated_text ? (
+                                <p className="text-gray-700 text-sm line-clamp-3">
+                                  {draft.generated_text}
+                                </p>
+                              ) : (
+                                <span className="text-gray-400 italic text-sm">No text generated</span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-center">
+                            {mediaUrl ? (
+                              <div className="flex justify-center">
+                                {isVideoContent ? (
+                                  <button
+                                    onClick={() => setVideoModalUrl(mediaUrl)}
+                                    className="relative group"
+                                  >
+                                    <div className="w-24 h-24 bg-gradient-to-br from-orange-100 to-pink-100 rounded-lg flex items-center justify-center border-2 border-orange-200 group-hover:border-orange-400 transition-all">
+                                      <Upload className="w-8 h-8 text-orange-500" />
+                                    </div>
+                                    <div className="absolute inset-0 bg-black/20 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                      <span className="text-white text-xs font-semibold">Play</span>
+                                    </div>
+                                  </button>
+                                ) : (
+                                  <img
+                                    src={mediaUrl}
+                                    alt="Content preview"
+                                    className="w-24 h-24 object-cover rounded-lg border-2 border-orange-200 shadow-sm"
+                                    onError={(e) => {
+                                      e.currentTarget.style.display = 'none';
+                                    }}
+                                  />
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-gray-400 italic text-sm">No media</span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 text-center">
+                            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-gradient-to-r from-blue-400 to-cyan-500 text-white shadow-sm">
+                              {draft.platform}
                             </span>
                           </td>
                           <td className="px-6 py-4 text-center">
-                            <button
-                              onClick={() => toggleRowExpansion(campaign.id)}
-                              className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white rounded-lg transition-all font-medium transform hover:scale-105 shadow-sm"
-                            >
-                              {expandedRow === campaign.id ? (
-                                <>
-                                  Hide <ChevronUp className="w-4 h-4" />
-                                </>
-                              ) : (
-                                <>
-                                  View <ChevronDown className="w-4 h-4" />
-                                </>
-                              )}
-                            </button>
+                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold text-white shadow-sm ${getStatusBadgeClass(draft.status)}`}>
+                              {draft.status.replace('_', ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-center text-gray-600 text-sm">
+                            {formatDate(draft.created_at)}
                           </td>
                         </tr>
-                        {expandedRow === campaign.id && (
-                          <tr key={`${campaign.id}-details`}>
-                            <td colSpan={6} className="px-6 py-6 bg-gradient-to-br from-orange-50/50 to-pink-50/50">
-                              <div className="space-y-6">
-                                <div className="grid grid-cols-1 gap-4">
-                                  <div className="bg-white/60 rounded-xl p-4 border border-white/50">
-                                    <span className="text-sm font-semibold text-gray-700">Full Campaign ID:</span>
-                                    <p className="mt-1 text-gray-600 font-mono text-sm break-all">{campaign.id}</p>
-                                  </div>
-                                  <div className="bg-white/60 rounded-xl p-4 border border-white/50">
-                                    <span className="text-sm font-semibold text-gray-700">Content Idea:</span>
-                                    <p className="mt-1 text-gray-600">{campaign.content_idea}</p>
-                                  </div>
-                                  {campaign.knowledge_base_file && (
-                                    <div className="bg-white/60 rounded-xl p-4 border border-white/50">
-                                      <span className="text-sm font-semibold text-gray-700">Knowledge Base File:</span>
-                                      <p className="mt-1 text-gray-600">{campaign.knowledge_base_file}</p>
-                                    </div>
-                                  )}
-                                </div>
-
-                                {campaign.campaign_content.map((content) => (
-                                  <div key={content.id} className="border-t-2 border-orange-200 pt-6">
-                                    <h4 className="text-xl font-bold bg-gradient-to-r from-orange-500 to-pink-500 bg-clip-text text-transparent mb-4">
-                                      {getPlatformLabel(content.platform)}
-                                    </h4>
-                                    <div className="grid grid-cols-1 gap-4">
-                                      {content.text_content && (
-                                        <div className="bg-white/60 rounded-xl p-4 border border-white/50">
-                                          <span className="text-sm font-semibold text-gray-700">Text:</span>
-                                          <p className="mt-1 text-gray-600 whitespace-pre-wrap">{content.text_content}</p>
-                                        </div>
-                                      )}
-                                      {content.image_link && (
-                                        <div className="bg-white/60 rounded-xl p-4 border border-white/50">
-                                          <span className="text-sm font-semibold text-gray-700">Generated Image:</span>
-                                          <div className="mt-3">
-                                            <img
-                                              src={content.image_link}
-                                              alt={`${getPlatformLabel(content.platform)} content`}
-                                              className="w-full max-w-md rounded-xl shadow-lg border-2 border-white"
-                                              onError={(e) => {
-                                                const target = e.target as HTMLImageElement;
-                                                target.style.display = 'none';
-                                              }}
-                                            />
-                                          </div>
-                                          <p className="mt-2 text-xs text-gray-500 break-all">{content.image_link}</p>
-                                        </div>
-                                      )}
-                                      {content.video_link && (
-                                        <div className="bg-white/60 rounded-xl p-4 border border-white/50">
-                                          <span className="text-sm font-semibold text-gray-700">Video Link:</span>
-                                          <p className="mt-1 text-gray-600 break-all">{content.video_link}</p>
-                                        </div>
-                                      )}
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            </td>
-                          </tr>
-                        )}
-                      </>
-                    ))}
+                      );
+                    })}
                   </tbody>
                 </table>
+              </div>
+
+              <div className="bg-gradient-to-r from-orange-50 to-pink-50 px-6 py-4 border-t border-orange-200">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600">
+                    Total: <span className="font-semibold text-gray-900">{drafts.length}</span> draft{drafts.length !== 1 ? 's' : ''}
+                  </span>
+                  {selectedDraftId && (
+                    <span className="text-orange-600 font-semibold">
+                      1 draft selected - Click "Post Content" to publish
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           )}
         </div>
       </main>
+
+      {videoModalUrl && (
+        <VideoModal
+          videoUrl={videoModalUrl}
+          onClose={() => setVideoModalUrl(null)}
+        />
+      )}
     </div>
   );
 }
