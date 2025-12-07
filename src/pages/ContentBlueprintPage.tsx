@@ -214,7 +214,7 @@ function ContentBlueprintPage() {
       };
 
       console.log('=== TEST WEBHOOK REQUEST START ===');
-      console.log('Webhook URL: https://myaistaff.app.n8n.cloud/webhook-test/PostBluePrint');
+      console.log('Webhook URL: https://myaistaff.app.n8n.cloud/webhook/PostBluePrint');
       console.log('Payload:', JSON.stringify(webhookPayload, null, 2));
 
       let extractedText = null;
@@ -226,7 +226,7 @@ function ContentBlueprintPage() {
 
       try {
         const webhookPromise = (async () => {
-          const webhookResponse = await fetch('https://myaistaff.app.n8n.cloud/webhook-test/PostBluePrint', {
+          const webhookResponse = await fetch('https://myaistaff.app.n8n.cloud/webhook/PostBluePrint', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -425,10 +425,10 @@ function ContentBlueprintPage() {
       try {
         const webhookPromise = (async () => {
         console.log('=== WEBHOOK REQUEST START ===');
-        console.log('Webhook URL: https://myaistaff.app.n8n.cloud/webhook-test/PostBluePrint');
+        console.log('Webhook URL: https://myaistaff.app.n8n.cloud/webhook/PostBluePrint');
         console.log('Payload:', JSON.stringify({ ...webhookPayload, draft_id: draftId }, null, 2));
 
-        const webhookResponse = await fetch('https://myaistaff.app.n8n.cloud/webhook-test/PostBluePrint', {
+        const webhookResponse = await fetch('https://myaistaff.app.n8n.cloud/webhook/PostBluePrint', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
