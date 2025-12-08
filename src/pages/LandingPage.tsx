@@ -182,7 +182,7 @@ export default function LandingPage() {
         <div className="relative max-w-6xl mx-auto text-center">
           <div className="animate-fade-in">
             <h1 className="text-6xl md:text-7xl lg:text-8xl font-bold text-gray-900 mb-6 leading-tight">
-              One Brain.
+              DASH.AI - Your AI Partner for Instant Social Media Posts
               <br />
               <span className="text-5xl md:text-6xl lg:text-7xl bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 bg-clip-text text-transparent">
                 Automate. Convert. Support.
