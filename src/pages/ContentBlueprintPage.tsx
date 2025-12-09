@@ -17,7 +17,6 @@ interface ContentDraft {
   format: Format;
 
   assetSource: AssetSource;
-  knowledgeBaseFile: File | null;
   assetFile: File | null;
 }
 
@@ -43,7 +42,6 @@ function ContentBlueprintPage() {
     platform: '',
     format: '',
     assetSource: '',
-    knowledgeBaseFile: null,
     assetFile: null,
   });
 
@@ -84,11 +82,6 @@ function ContentBlueprintPage() {
 
   const handleAssetSourceChange = (assetSource: AssetSource) => {
     setContentDraft(prev => ({ ...prev, assetSource }));
-  };
-
-  const handleKnowledgeBaseFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null;
-    setContentDraft(prev => ({ ...prev, knowledgeBaseFile: file }));
   };
 
   const handleAssetFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -242,7 +235,6 @@ function ContentBlueprintPage() {
         platform: contentDraft.platform,
         format: contentDraft.format,
         asset_source: contentDraft.format === 'Text Only' ? null : contentDraft.assetSource,
-        knowledge_base_file_name: contentDraft.knowledgeBaseFile?.name || null,
         asset_file_name: contentDraft.assetFile?.name || null,
       };
 
@@ -255,7 +247,6 @@ function ContentBlueprintPage() {
         platform: contentDraft.platform,
         format: contentDraft.format,
         asset_source: contentDraft.format === 'Text Only' ? null : contentDraft.assetSource,
-        knowledge_base_file_name: contentDraft.knowledgeBaseFile?.name || null,
         asset_file_name: contentDraft.assetFile?.name || null,
         status: 'draft_created',
       };
@@ -456,7 +447,6 @@ function ContentBlueprintPage() {
         platform: '',
         format: '',
         assetSource: '',
-        knowledgeBaseFile: null,
         assetFile: null,
       });
 
@@ -539,35 +529,6 @@ function ContentBlueprintPage() {
                     placeholder="Example: Launch announcement for our new sustainable fashion collection featuring eco-friendly materials and modern designs..."
                     required
                   />
-                </div>
-
-                <div>
-                  <label htmlFor="knowledgeBase" className="block text-sm font-semibold text-slate-700 mb-2">
-                    Industry Knowledge Base (PDF Upload)
-                  </label>
-                  <p className="text-sm text-slate-500 mb-2">Optional: Upload a PDF to enhance content generation</p>
-                  <div className="relative">
-                    <input
-                      type="file"
-                      id="knowledgeBase"
-                      accept=".pdf"
-                      onChange={handleKnowledgeBaseFileChange}
-                      className="hidden"
-                    />
-                    <label
-                      htmlFor="knowledgeBase"
-                      className="flex items-center justify-center gap-2 w-full px-4 py-3 border-2 border-dashed border-orange-200 rounded-lg hover:border-orange-400 hover:bg-orange-50 transition-all cursor-pointer text-gray-600 font-medium"
-                    >
-                      <Upload className="w-5 h-5" />
-                      {contentDraft.knowledgeBaseFile ? 'Change PDF File' : 'Upload PDF File'}
-                    </label>
-                  </div>
-                  {contentDraft.knowledgeBaseFile && (
-                    <div className="mt-2 flex items-center gap-2 text-sm text-gray-600">
-                      <FileText className="w-4 h-4 text-orange-600" />
-                      <span className="font-medium">{contentDraft.knowledgeBaseFile.name}</span>
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
