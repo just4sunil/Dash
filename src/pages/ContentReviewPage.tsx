@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { CheckCircle2, XCircle, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
+import { CheckCircle2, XCircle, Loader2, AlertCircle, RefreshCw, Sparkles } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../lib/authContext';
@@ -174,6 +174,15 @@ function ContentReviewPage() {
 
       <main className="flex-1 overflow-y-auto">
         <div className="max-w-4xl mx-auto px-6 py-12">
+          <div className="flex justify-end mb-6">
+            <Link
+              to="/"
+              className="flex items-center gap-2 px-4 py-2 text-orange-600 hover:text-orange-700 transition-colors group"
+            >
+              <Sparkles className="w-6 h-6 group-hover:scale-110 transition-transform" />
+              <span className="text-xl font-bold">DashAI</span>
+            </Link>
+          </div>
           <div className="mb-8 text-center">
             <h1 className="text-4xl font-bold bg-gradient-to-r from-orange-500 to-pink-500 bg-clip-text text-transparent mb-3">
               Review Generated Content
