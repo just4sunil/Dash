@@ -870,7 +870,7 @@ function ContentBlueprintPage() {
                     </div>
                   )}
 
-                  <div className="pt-4 flex gap-4">
+                  <div className="pt-4 flex gap-3">
                     <button
                       onClick={() => {
                         setGeneratedText(null);
@@ -881,13 +881,37 @@ function ContentBlueprintPage() {
                         setIsMediaReady(false);
                         setSuccess(null);
                       }}
-                      className="flex-1 px-6 py-3 bg-white border-2 border-slate-300 text-slate-700 rounded-lg font-semibold hover:bg-slate-50 hover:border-slate-400 transition-all"
+                      className="px-6 py-3 bg-white border-2 border-slate-300 text-slate-700 rounded-lg font-semibold hover:bg-slate-50 hover:border-slate-400 transition-all"
                     >
                       Create New Content
                     </button>
+                    <button
+                      onClick={() => {
+                        console.log('Regenerate clicked');
+                      }}
+                      className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-all"
+                    >
+                      Regenerate
+                    </button>
+                    <button
+                      onClick={() => {
+                        console.log('Save clicked');
+                      }}
+                      className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-all"
+                    >
+                      Save
+                    </button>
+                    <button
+                      onClick={() => {
+                        console.log('Post clicked');
+                      }}
+                      className="px-6 py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-semibold transition-all"
+                    >
+                      Post
+                    </button>
                     <Link
                       to="/content-review"
-                      className="flex-1 px-6 py-3 bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white rounded-lg font-semibold transition-all hover:shadow-xl hover:shadow-orange-500/30 text-center"
+                      className="px-6 py-3 bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white rounded-lg font-semibold transition-all hover:shadow-xl hover:shadow-orange-500/30 text-center"
                     >
                       Go to Review Page
                     </Link>
