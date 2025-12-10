@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Search, Calendar, Filter, Sparkles, CheckCircle, Upload, Loader2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Sidebar } from '../components/Sidebar';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../lib/authContext';
@@ -160,6 +161,15 @@ function ContentHistoryPage() {
         </div>
 
         <div className="relative max-w-7xl mx-auto p-8">
+          <div className="flex justify-end mb-6">
+            <Link
+              to="/"
+              className="flex items-center gap-2 px-4 py-2 text-orange-600 hover:text-orange-700 transition-colors group"
+            >
+              <Sparkles className="w-6 h-6 group-hover:scale-110 transition-transform" />
+              <span className="text-xl font-bold">DashAI</span>
+            </Link>
+          </div>
           <div className="mb-8">
             <h1 className="text-5xl font-bold bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 bg-clip-text text-transparent mb-3 flex items-center gap-3">
               <Sparkles className="w-10 h-10 text-orange-500" />
