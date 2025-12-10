@@ -473,6 +473,40 @@ function ContentBlueprintPage() {
     }
   };
 
+  const handleSave = async () => {
+    if (!currentDraftId) {
+      setError('No content to save');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const { error: updateError } = await supabase
+        .from('content_drafts')
+        .update({ status: 'content_generated_saved' })
+        .eq('id', currentDraftId);
+
+      if (updateError) {
+        throw updateError;
+      }
+
+      setSuccess('Content saved successfully!');
+
+      setTimeout(() => {
+        setSuccess(null);
+      }, 3000);
+
+    } catch (err: any) {
+      console.error('Error saving content:', err);
+      setError(err.message || 'Failed to save content. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleRegenerate = async () => {
     if (!submittedCampaignName || !submittedIdea) {
       setError('Cannot regenerate: missing original content information');
@@ -1134,12 +1168,11 @@ function ContentBlueprintPage() {
                       {loading || waitingForWebhook ? 'Regenerating...' : 'Regenerate'}
                     </button>
                     <button
-                      onClick={() => {
-                        console.log('Save clicked');
-                      }}
-                      className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-all"
+                      onClick={handleSave}
+                      disabled={loading || waitingForWebhook || !currentDraftId}
+                      className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      Save
+                      {loading ? 'Saving...' : 'Save'}
                     </button>
                     <button
                       onClick={() => {
