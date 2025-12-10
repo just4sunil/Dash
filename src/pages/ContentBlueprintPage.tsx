@@ -493,11 +493,11 @@ function ContentBlueprintPage() {
         throw updateError;
       }
 
-      setSuccess('Content saved successfully!');
+      setSuccess('Content saved successfully! You can review it anytime in Content History.');
 
       setTimeout(() => {
         setSuccess(null);
-      }, 3000);
+      }, 5000);
 
     } catch (err: any) {
       console.error('Error saving content:', err);
@@ -1007,6 +1007,13 @@ function ContentBlueprintPage() {
                 </div>
 
                 <div className="p-8 space-y-6">
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                    <p className="text-sm text-blue-900 flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                      <span className="font-semibold">Your content has been automatically saved to the database.</span>
+                      You can view it anytime in Content History.
+                    </p>
+                  </div>
                   {(submittedCampaignName || submittedIdea) && (
                     <div className="bg-blue-50 rounded-xl p-6 border border-blue-200">
                       <h4 className="text-sm font-bold text-blue-900 mb-4 uppercase tracking-wide">Original Request</h4>
@@ -1191,12 +1198,6 @@ function ContentBlueprintPage() {
                     >
                       Post
                     </button>
-                    <Link
-                      to="/content-review"
-                      className="px-6 py-3 bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white rounded-lg font-semibold transition-all hover:shadow-xl hover:shadow-orange-500/30 text-center"
-                    >
-                      Go to Review Page
-                    </Link>
                   </div>
                 </div>
               </div>
@@ -1208,14 +1209,11 @@ function ContentBlueprintPage() {
                   <AlertCircle className="w-12 h-12 text-amber-600 mx-auto mb-4" />
                   <h3 className="text-xl font-bold text-slate-900 mb-2">Request Timed Out</h3>
                   <p className="text-slate-600 mb-4">
-                    The content generation is taking longer than expected. Your draft has been saved and the content may still be processing.
+                    The content generation is taking longer than expected. Your draft has been saved to the database and the content may still be processing.
                   </p>
-                  <Link
-                    to="/content-review"
-                    className="inline-block px-6 py-3 bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white rounded-lg font-semibold transition-all"
-                  >
-                    Check Review Page
-                  </Link>
+                  <p className="text-slate-700 font-semibold">
+                    You can check Content History later to view your generated content.
+                  </p>
                 </div>
               </div>
             )}
