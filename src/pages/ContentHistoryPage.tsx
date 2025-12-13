@@ -136,7 +136,7 @@ function ContentHistoryPage() {
         throw new Error(`Webhook call failed: ${response.statusText}`);
       }
 
-      alert(`Content posted successfully to ${selectedDraft.platform}!`);
+      alert('Your selected content is successfully posted on your chosen platform');
     } catch (error: any) {
       console.error('Error posting content:', error);
       alert('Error posting content: ' + error.message);
