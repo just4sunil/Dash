@@ -103,7 +103,40 @@ function ContentHistoryPage() {
 
     setIsPosting(true);
     try {
-      alert(`Posting content to ${selectedDraft.platform}!\n\nDraft ID: ${selectedDraft.id}\nCampaign: ${selectedDraft.campaign_name}\n\nThis functionality can be integrated with your posting API.`);
+      const webhookUrl = 'https://myaistaff.app.n8n.cloud/webhook-test/Approved';
+
+      const payload = {
+        draftId: selectedDraft.id,
+        campaignId: selectedDraft.campaign_id,
+        campaignName: selectedDraft.campaign_name,
+        idea: selectedDraft.idea,
+        platform: selectedDraft.platform,
+        format: selectedDraft.format,
+        assetSource: selectedDraft.asset_source,
+        generatedText: selectedDraft.generated_text,
+        generatedImageUrl: selectedDraft.generated_image_url,
+        generatedVideoUrl: selectedDraft.generated_video_url,
+        userUploadedImageUrl: selectedDraft.user_uploaded_image_url,
+        userUploadedVideoUrl: selectedDraft.user_uploaded_video_url,
+        status: selectedDraft.status,
+        isMediaReady: selectedDraft.is_media_ready,
+        userId: selectedDraft.user_id,
+        timestamp: new Date().toISOString(),
+      };
+
+      const response = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Webhook call failed: ${response.statusText}`);
+      }
+
+      alert(`Content posted successfully to ${selectedDraft.platform}!`);
     } catch (error: any) {
       console.error('Error posting content:', error);
       alert('Error posting content: ' + error.message);
