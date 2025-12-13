@@ -32,6 +32,8 @@ function ContentHistoryPage() {
   const [selectedDraftId, setSelectedDraftId] = useState<string | null>(null);
   const [isPosting, setIsPosting] = useState(false);
   const [videoModalUrl, setVideoModalUrl] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const [campaignName, setCampaignName] = useState('');
   const [startDate, setStartDate] = useState('');
@@ -45,6 +47,8 @@ function ContentHistoryPage() {
     }
 
     setIsLoading(true);
+    setSuccessMessage(null);
+    setErrorMessage(null);
     try {
       let query = supabase
         .from('content_drafts')
@@ -102,6 +106,8 @@ function ContentHistoryPage() {
     if (!selectedDraft) return;
 
     setIsPosting(true);
+    setSuccessMessage(null);
+    setErrorMessage(null);
     try {
       const webhookUrl = 'https://myaistaff.app.n8n.cloud/webhook-test/Approved';
 
@@ -136,10 +142,10 @@ function ContentHistoryPage() {
         throw new Error(`Webhook call failed: ${response.statusText}`);
       }
 
-      alert('Your selected content is successfully posted on your chosen platform');
+      setSuccessMessage('Your selected content is successfully posted on your chosen platform');
     } catch (error: any) {
       console.error('Error posting content:', error);
-      alert('Error posting content: ' + error.message);
+      setErrorMessage('Error posting content: ' + error.message);
     } finally {
       setIsPosting(false);
     }
@@ -210,6 +216,20 @@ function ContentHistoryPage() {
             </h1>
             <p className="text-gray-600 text-lg">Search, filter, and manage your content drafts</p>
           </div>
+
+          {successMessage && (
+            <div className="mb-6 bg-green-50 border-2 border-green-200 rounded-2xl p-4 flex items-center gap-3 shadow-lg">
+              <CheckCircle className="w-6 h-6 text-green-600 flex-shrink-0" />
+              <p className="text-green-800 font-semibold">{successMessage}</p>
+            </div>
+          )}
+
+          {errorMessage && (
+            <div className="mb-6 bg-red-50 border-2 border-red-200 rounded-2xl p-4 flex items-center gap-3 shadow-lg">
+              <span className="text-red-600 text-xl flex-shrink-0">⚠</span>
+              <p className="text-red-800 font-semibold">{errorMessage}</p>
+            </div>
+          )}
 
           <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl p-6 mb-6 border border-white/50 space-y-4">
             <div className="flex gap-4">
