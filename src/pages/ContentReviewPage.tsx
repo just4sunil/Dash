@@ -101,7 +101,7 @@ function ContentReviewPage() {
           draft_id: latestDraft.id,
         };
 
-        await fetch('https://myaistaff.app.n8n.cloud/webhook-test/Approved', {
+        await fetch('https://myaistaff.app.n8n.cloud/webhook/Approved', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

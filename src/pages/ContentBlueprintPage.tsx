@@ -518,7 +518,7 @@ function ContentBlueprintPage() {
     setSuccess(null);
 
     try {
-      const webhookUrl = 'https://myaistaff.app.n8n.cloud/webhook-test/Approved';
+      const webhookUrl = 'https://myaistaff.app.n8n.cloud/webhook/Approved';
 
       const payload = {
         draftId: currentDraftId,
