@@ -50,6 +50,49 @@ function ContentBlueprintPage() {
     assetFile: null,
   });
 
+  const uploadImageToSupabase = async (imageUrl: string, userId: string): Promise<string | null> => {
+    try {
+      console.log('Downloading image from webhook URL:', imageUrl);
+
+      const response = await fetch(imageUrl);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch image: ${response.statusText}`);
+      }
+
+      const blob = await response.blob();
+      const timestamp = Date.now();
+      const fileExtension = imageUrl.split('.').pop()?.split('?')[0] || 'jpg';
+      const fileName = `ai-generated-${timestamp}.${fileExtension}`;
+      const filePath = `${userId}/${fileName}`;
+
+      console.log('Uploading image to Supabase storage:', filePath);
+
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('ai-images')
+        .upload(filePath, blob, {
+          contentType: blob.type,
+          cacheControl: '3600',
+          upsert: false,
+        });
+
+      if (uploadError) {
+        console.error('Error uploading to Supabase storage:', uploadError);
+        throw uploadError;
+      }
+
+      const { data: publicUrlData } = supabase.storage
+        .from('ai-images')
+        .getPublicUrl(filePath);
+
+      console.log('Image uploaded successfully to Supabase:', publicUrlData.publicUrl);
+      return publicUrlData.publicUrl;
+
+    } catch (error: any) {
+      console.error('Error in uploadImageToSupabase:', error);
+      return null;
+    }
+  };
+
   useEffect(() => {
     if (contentDraft.format === 'Text Only') {
       setContentDraft(prev => ({
@@ -367,12 +410,25 @@ function ContentBlueprintPage() {
           console.log('Generated Image URL:', extractedImageUrl);
           console.log('Generated Video URL:', extractedVideoUrl);
 
+          let supabaseImageUrl = extractedImageUrl;
+
+          if (extractedImageUrl && user?.id) {
+            console.log('=== UPLOADING IMAGE TO SUPABASE ===');
+            const uploadedUrl = await uploadImageToSupabase(extractedImageUrl, user.id);
+            if (uploadedUrl) {
+              supabaseImageUrl = uploadedUrl;
+              console.log('Successfully uploaded image to Supabase storage');
+            } else {
+              console.warn('Failed to upload image to Supabase, using original URL');
+            }
+          }
+
           setGeneratedText(extractedText);
-          setGeneratedImageUrl(extractedImageUrl);
+          setGeneratedImageUrl(supabaseImageUrl);
           setGeneratedVideoUrl(extractedVideoUrl);
 
           if (draftId) {
-            if (extractedText || extractedImageUrl || extractedVideoUrl) {
+            if (extractedText || supabaseImageUrl || extractedVideoUrl) {
               console.log('=== UPDATING DATABASE ===');
               console.log('Draft ID:', draftId);
 
@@ -387,7 +443,7 @@ function ContentBlueprintPage() {
               }
 
               if (contentDraft.format === 'Image + Text') {
-                updateData.generated_image_url = extractedImageUrl;
+                updateData.generated_image_url = supabaseImageUrl;
               }
 
               if (contentDraft.format === 'Video Post') {
@@ -691,12 +747,25 @@ function ContentBlueprintPage() {
           console.log('Generated Image URL:', extractedImageUrl);
           console.log('Generated Video URL:', extractedVideoUrl);
 
+          let supabaseImageUrl = extractedImageUrl;
+
+          if (extractedImageUrl && user?.id) {
+            console.log('=== UPLOADING IMAGE TO SUPABASE (REGENERATE) ===');
+            const uploadedUrl = await uploadImageToSupabase(extractedImageUrl, user.id);
+            if (uploadedUrl) {
+              supabaseImageUrl = uploadedUrl;
+              console.log('Successfully uploaded image to Supabase storage');
+            } else {
+              console.warn('Failed to upload image to Supabase, using original URL');
+            }
+          }
+
           setGeneratedText(extractedText);
-          setGeneratedImageUrl(extractedImageUrl);
+          setGeneratedImageUrl(supabaseImageUrl);
           setGeneratedVideoUrl(extractedVideoUrl);
 
           if (draftId) {
-            if (extractedText || extractedImageUrl || extractedVideoUrl) {
+            if (extractedText || supabaseImageUrl || extractedVideoUrl) {
               console.log('=== UPDATING DATABASE ===');
               console.log('Draft ID:', draftId);
 
@@ -707,7 +776,7 @@ function ContentBlueprintPage() {
               };
 
               if (submittedFormat === 'Image + Text') {
-                updateData.generated_image_url = extractedImageUrl;
+                updateData.generated_image_url = supabaseImageUrl;
               }
 
               if (submittedFormat === 'Video Post') {
