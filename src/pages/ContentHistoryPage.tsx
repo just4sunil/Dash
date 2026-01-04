@@ -50,9 +50,30 @@ function ContentHistoryPage() {
     setSuccessMessage(null);
     setErrorMessage(null);
     try {
+      console.log('=== FETCHING CONTENT DRAFTS ===');
+      console.log('User ID:', user.id);
+      console.log('Filters:', { campaignName, startDate, endDate, statusFilter });
+
       let query = supabase
         .from('content_drafts')
-        .select('*')
+        .select(`
+          id,
+          user_id,
+          created_at,
+          campaign_name,
+          campaign_id,
+          idea,
+          platform,
+          format,
+          asset_source,
+          generated_text,
+          generated_image_url,
+          generated_video_url,
+          user_uploaded_image_url,
+          user_uploaded_video_url,
+          status,
+          is_media_ready
+        `)
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
@@ -77,13 +98,27 @@ function ContentHistoryPage() {
       const { data, error } = await query;
 
       if (error) {
+        console.error('Supabase query error:', error);
         throw error;
+      }
+
+      console.log('=== DRAFTS FETCHED SUCCESSFULLY ===');
+      console.log('Total drafts:', data?.length || 0);
+
+      if (data && data.length > 0) {
+        console.log('Sample draft media URLs:', {
+          generated_image_url: data[0].generated_image_url,
+          generated_video_url: data[0].generated_video_url,
+          user_uploaded_image_url: data[0].user_uploaded_image_url,
+          user_uploaded_video_url: data[0].user_uploaded_video_url,
+        });
       }
 
       setDrafts(data || []);
       setSelectedDraftId(null);
     } catch (error: any) {
-      console.error('Error fetching drafts:', error);
+      console.error('=== ERROR FETCHING DRAFTS ===');
+      console.error('Error:', error);
       alert('Error loading content drafts: ' + error.message);
     } finally {
       setIsLoading(false);
@@ -163,10 +198,33 @@ function ContentHistoryPage() {
   };
 
   const getMediaUrl = (draft: ContentDraft) => {
-    if (draft.user_uploaded_image_url) return draft.user_uploaded_image_url;
-    if (draft.user_uploaded_video_url) return draft.user_uploaded_video_url;
-    if (draft.generated_image_url) return draft.generated_image_url;
-    if (draft.generated_video_url) return draft.generated_video_url;
+    const urls = {
+      user_uploaded_image: draft.user_uploaded_image_url,
+      user_uploaded_video: draft.user_uploaded_video_url,
+      generated_image: draft.generated_image_url,
+      generated_video: draft.generated_video_url,
+    };
+
+    console.log(`Media URLs for draft ${draft.id}:`, urls);
+
+    if (draft.user_uploaded_image_url) {
+      console.log('Using user uploaded image:', draft.user_uploaded_image_url);
+      return draft.user_uploaded_image_url;
+    }
+    if (draft.user_uploaded_video_url) {
+      console.log('Using user uploaded video:', draft.user_uploaded_video_url);
+      return draft.user_uploaded_video_url;
+    }
+    if (draft.generated_image_url) {
+      console.log('Using generated image:', draft.generated_image_url);
+      return draft.generated_image_url;
+    }
+    if (draft.generated_video_url) {
+      console.log('Using generated video:', draft.generated_video_url);
+      return draft.generated_video_url;
+    }
+
+    console.log('No media URL found for draft:', draft.id);
     return null;
   };
 
@@ -404,14 +462,24 @@ function ContentHistoryPage() {
                                     </div>
                                   </button>
                                 ) : (
-                                  <img
-                                    src={mediaUrl}
-                                    alt="Content preview"
-                                    className="w-24 h-24 object-cover rounded-lg border-2 border-orange-200 shadow-sm"
-                                    onError={(e) => {
-                                      e.currentTarget.style.display = 'none';
-                                    }}
-                                  />
+                                  <div className="relative">
+                                    <img
+                                      src={mediaUrl}
+                                      alt="Content preview"
+                                      className="w-24 h-24 object-cover rounded-lg border-2 border-orange-200 shadow-sm"
+                                      onLoad={(e) => {
+                                        console.log('Image loaded successfully:', mediaUrl);
+                                      }}
+                                      onError={(e) => {
+                                        console.error('Image failed to load:', mediaUrl);
+                                        const target = e.currentTarget as HTMLImageElement;
+                                        const parent = target.parentElement;
+                                        if (parent) {
+                                          parent.innerHTML = '<div class="w-24 h-24 bg-red-100 rounded-lg flex items-center justify-center border-2 border-red-200"><span class="text-red-500 text-xs text-center px-2">Image<br/>Failed</span></div>';
+                                        }
+                                      }}
+                                    />
+                                  </div>
                                 )}
                               </div>
                             ) : (
