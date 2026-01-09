@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Sparkles, Save, Wand2, Copy, RefreshCw, DollarSign, Target, Users, Calendar, TrendingUp } from 'lucide-react';
+import { Sparkles, Save, Wand2, Copy, RefreshCw, DollarSign, Target, Users, Calendar, TrendingUp, Upload, FileText, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Sidebar } from '../components/Sidebar';
 import { supabase } from '../lib/supabase';
@@ -39,6 +39,11 @@ function PaidContentPage() {
 
   const [contentIdea, setContentIdea] = useState('');
   const [desiredPostFormat, setDesiredPostFormat] = useState('Image + Text');
+  const [assetSource, setAssetSource] = useState('');
+  const [assetFile, setAssetFile] = useState<File | null>(null);
+  const [uploadingFile, setUploadingFile] = useState(false);
+  const [userUploadedImageUrl, setUserUploadedImageUrl] = useState<string | null>(null);
+  const [userUploadedVideoUrl, setUserUploadedVideoUrl] = useState<string | null>(null);
   const [brandTone, setBrandTone] = useState('Professional');
   const [ctaObjective, setCtaObjective] = useState('Learn More');
   const [visualStyle, setVisualStyle] = useState('Product-focused');
@@ -57,6 +62,87 @@ function PaidContentPage() {
     image_prompts: [],
     video_hooks: [],
   });
+
+  const getAcceptedFileTypes = () => {
+    if (desiredPostFormat === 'Image + Text') {
+      return '.jpg,.jpeg,.png,.gif';
+    } else if (desiredPostFormat === 'Video Post') {
+      return '.mp4,.mov,.avi';
+    }
+    return '';
+  };
+
+  const handleAssetFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+
+    if (!file) {
+      setAssetFile(null);
+      return;
+    }
+
+    const fileType = file.type;
+
+    if (desiredPostFormat === 'Image + Text' && !fileType.startsWith('image/')) {
+      alert('Please upload an image file (JPEG, PNG, etc.) for an Image + Text post.');
+      e.target.value = '';
+      return;
+    }
+
+    if (desiredPostFormat === 'Video Post' && !fileType.startsWith('video/')) {
+      alert('Please upload a video file (MP4, MOV, etc.) for a Video Post.');
+      e.target.value = '';
+      return;
+    }
+
+    setAssetFile(file);
+
+    if (!user?.id) {
+      alert('User not authenticated. Please sign in to upload files.');
+      return;
+    }
+
+    setUploadingFile(true);
+    setSuccessMessage(null);
+
+    try {
+      const timestamp = Date.now();
+      const fileExtension = file.name.split('.').pop();
+      const filePath = `PaidContent/user-${user.id}/${timestamp}_${file.name}`;
+
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('user-media')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false,
+        });
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      const { data: publicUrlData } = supabase.storage
+        .from('user-media')
+        .getPublicUrl(filePath);
+
+      const publicUrl = publicUrlData.publicUrl;
+
+      if (desiredPostFormat === 'Image + Text') {
+        setUserUploadedImageUrl(publicUrl);
+      } else if (desiredPostFormat === 'Video Post') {
+        setUserUploadedVideoUrl(publicUrl);
+      }
+
+      setSuccessMessage(`${desiredPostFormat === 'Image + Text' ? 'Image' : 'Video'} uploaded successfully!`);
+
+    } catch (err: any) {
+      console.error('Upload error:', err);
+      alert(`Failed to upload file: ${err.message}`);
+      setAssetFile(null);
+      e.target.value = '';
+    } finally {
+      setUploadingFile(false);
+    }
+  };
 
   const handleGenerate = async () => {
     if (!user?.id) {
@@ -121,6 +207,10 @@ function PaidContentPage() {
           optimization_preference: optimizationPreference,
           content_idea: contentIdea,
           desired_post_format: desiredPostFormat,
+          asset_source: desiredPostFormat === 'Text Only' ? null : assetSource || null,
+          asset_file_name: assetFile?.name || null,
+          user_uploaded_image_url: userUploadedImageUrl || null,
+          user_uploaded_video_url: userUploadedVideoUrl || null,
           brand_tone: brandTone,
           cta_objective: ctaObjective,
           visual_style: visualStyle,
@@ -188,6 +278,10 @@ function PaidContentPage() {
           optimization_preference: optimizationPreference,
           content_idea: contentIdea,
           desired_post_format: desiredPostFormat,
+          asset_source: desiredPostFormat === 'Text Only' ? null : assetSource || null,
+          asset_file_name: assetFile?.name || null,
+          user_uploaded_image_url: userUploadedImageUrl || null,
+          user_uploaded_video_url: userUploadedVideoUrl || null,
           brand_tone: brandTone,
           cta_objective: ctaObjective,
           visual_style: visualStyle,
@@ -491,6 +585,81 @@ function PaidContentPage() {
                   ))}
                 </div>
               </div>
+
+              {desiredPostFormat && desiredPostFormat !== 'Text Only' && (
+                <div className="mb-4">
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">
+                    Asset Source
+                  </label>
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    {(['AI Generate', 'Upload My Own'] as const).map((source) => (
+                      <button
+                        key={source}
+                        type="button"
+                        onClick={() => setAssetSource(source)}
+                        className={`px-4 py-3 rounded-xl font-semibold transition-all transform hover:scale-105 ${
+                          assetSource === source
+                            ? 'bg-gradient-to-r from-orange-500 to-pink-500 text-white shadow-lg'
+                            : 'bg-white border-2 border-orange-200 text-gray-700 hover:border-orange-400 hover:bg-orange-50'
+                        }`}
+                      >
+                        {source}
+                      </button>
+                    ))}
+                  </div>
+
+                  {assetSource === 'Upload My Own' && (
+                    <div>
+                      <label htmlFor="assetFile" className="block text-sm font-semibold text-gray-700 mb-2">
+                        Upload Custom Asset
+                      </label>
+                      <p className="text-sm text-gray-600 mb-2">
+                        {desiredPostFormat === 'Image + Text'
+                          ? 'Upload an image file (JPG, PNG, GIF)'
+                          : 'Upload a video file (MP4, MOV, AVI)'}
+                      </p>
+                      <div className="relative">
+                        <input
+                          type="file"
+                          id="assetFile"
+                          accept={getAcceptedFileTypes()}
+                          onChange={handleAssetFileChange}
+                          className="hidden"
+                        />
+                        <label
+                          htmlFor="assetFile"
+                          className={`flex items-center justify-center gap-2 w-full px-4 py-3 border-2 border-dashed rounded-xl transition-all font-medium ${
+                            uploadingFile
+                              ? 'border-orange-400 bg-orange-50 cursor-wait text-orange-700'
+                              : 'border-orange-200 hover:border-orange-400 hover:bg-orange-50 cursor-pointer text-gray-600'
+                          }`}
+                        >
+                          {uploadingFile ? (
+                            <>
+                              <Loader2 className="w-5 h-5 animate-spin" />
+                              Uploading...
+                            </>
+                          ) : (
+                            <>
+                              <Upload className="w-5 h-5" />
+                              {assetFile
+                                ? `Change ${desiredPostFormat === 'Image + Text' ? 'Image' : 'Video'} File`
+                                : `Upload ${desiredPostFormat === 'Image + Text' ? 'Image' : 'Video'} File`}
+                            </>
+                          )}
+                        </label>
+                      </div>
+                      {assetFile && (
+                        <div className="mt-2 flex items-center gap-2 text-sm text-gray-600">
+                          <FileText className="w-4 h-4 text-orange-600" />
+                          <span className="font-medium">{assetFile.name}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div className="mb-4">
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Content Idea *
