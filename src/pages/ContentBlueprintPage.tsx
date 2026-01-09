@@ -899,7 +899,7 @@ function ContentBlueprintPage() {
           </div>
           <div className="mb-8 text-center">
             <h1 className="text-4xl font-bold bg-gradient-to-r from-orange-500 to-pink-500 bg-clip-text text-transparent mb-3">
-              Social Media Content Blueprint
+              Organic Content
             </h1>
             <p className="text-lg text-gray-700">
               Let's create your next engaging social media post

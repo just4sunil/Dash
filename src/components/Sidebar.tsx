@@ -56,7 +56,7 @@ export function Sidebar() {
                     : 'text-gray-700 bg-white/60 hover:bg-orange-50 border-2 border-orange-200/50'
                 }`}
               >
-                Creation
+                Organic Content
               </button>
               <button
                 onClick={() => navigate('/paid-content')}
