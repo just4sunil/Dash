@@ -38,6 +38,7 @@ function PaidContentPage() {
   const [optimizationPreference, setOptimizationPreference] = useState('Conversions');
 
   const [contentIdea, setContentIdea] = useState('');
+  const [desiredPostFormat, setDesiredPostFormat] = useState('Image + Text');
   const [brandTone, setBrandTone] = useState('Professional');
   const [ctaObjective, setCtaObjective] = useState('Learn More');
   const [visualStyle, setVisualStyle] = useState('Product-focused');
@@ -119,6 +120,7 @@ function PaidContentPage() {
           end_date: endDate || null,
           optimization_preference: optimizationPreference,
           content_idea: contentIdea,
+          desired_post_format: desiredPostFormat,
           brand_tone: brandTone,
           cta_objective: ctaObjective,
           visual_style: visualStyle,
@@ -185,6 +187,7 @@ function PaidContentPage() {
           end_date: endDate || null,
           optimization_preference: optimizationPreference,
           content_idea: contentIdea,
+          desired_post_format: desiredPostFormat,
           brand_tone: brandTone,
           cta_objective: ctaObjective,
           visual_style: visualStyle,
@@ -467,6 +470,27 @@ function PaidContentPage() {
                 <Wand2 className="w-6 h-6 text-orange-500" />
                 Creative Direction
               </h2>
+              <div className="mb-4">
+                <label className="block text-sm font-semibold text-gray-700 mb-3">
+                  Desired Post Format
+                </label>
+                <div className="grid grid-cols-3 gap-3">
+                  {(['Text Only', 'Image + Text', 'Video Post'] as const).map((format) => (
+                    <button
+                      key={format}
+                      type="button"
+                      onClick={() => setDesiredPostFormat(format)}
+                      className={`px-4 py-3 rounded-xl font-semibold transition-all transform hover:scale-105 ${
+                        desiredPostFormat === format
+                          ? 'bg-gradient-to-r from-orange-500 to-pink-500 text-white shadow-lg'
+                          : 'bg-white border-2 border-orange-200 text-gray-700 hover:border-orange-400 hover:bg-orange-50'
+                      }`}
+                    >
+                      {format}
+                    </button>
+                  ))}
+                </div>
+              </div>
               <div className="mb-4">
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Content Idea *
