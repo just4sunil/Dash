@@ -369,7 +369,7 @@ function ContentBlueprintPage() {
       let extractedImageUrl = null;
 
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Webhook timeout after 2 minutes')), 120000);
+        setTimeout(() => reject(new Error('Webhook timeout after 5 minutes')), 300000);
       });
 
       try {
@@ -797,7 +797,7 @@ function ContentBlueprintPage() {
       let extractedImageUrl = null;
 
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Webhook timeout after 2 minutes')), 120000);
+        setTimeout(() => reject(new Error('Webhook timeout after 5 minutes')), 300000);
       });
 
       try {
