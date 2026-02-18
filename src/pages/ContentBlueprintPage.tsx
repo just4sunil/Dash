@@ -375,12 +375,14 @@ function ContentBlueprintPage() {
       try {
         const webhookPromise = (async () => {
         console.log('=== WEBHOOK REQUEST START ===');
-        console.log('Webhook URL: https://myaistaff.app.n8n.cloud/webhook/PostBluePrint');
+        const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/process-content-draft`;
+        console.log('Webhook URL:', apiUrl);
         console.log('Payload:', JSON.stringify({ ...webhookPayload, draft_id: draftId }, null, 2));
 
-        const webhookResponse = await fetch('https://myaistaff.app.n8n.cloud/webhook/PostBluePrint', {
+        const webhookResponse = await fetch(apiUrl, {
           method: 'POST',
           headers: {
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
