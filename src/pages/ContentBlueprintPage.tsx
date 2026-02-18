@@ -410,20 +410,11 @@ function ContentBlueprintPage() {
 
           let extractedVideoUrl: string | null = null;
 
-          if (Array.isArray(webhookData) && webhookData.length > 0) {
-            const responseData = webhookData[0];
-            console.log('Processing array response, first element:', responseData);
-            extractedText = responseData.generated_text || responseData.post_content || responseData.facebookOutput?.[0] || null;
-            extractedImageUrl = responseData.generated_image_url || responseData.url?.[0] || null;
-            extractedVideoUrl = responseData.generated_video_url || responseData.video_url || null;
-            console.log('Extracted from array - Text:', extractedText ? 'YES' : 'NO', 'Image URL:', extractedImageUrl, 'Video URL:', extractedVideoUrl);
-          } else if (typeof webhookData === 'object' && webhookData !== null) {
-            console.log('Processing object response');
-            extractedText = webhookData.generated_text || webhookData.post_content || webhookData.text || webhookData.facebookOutput?.[0] || null;
-            extractedImageUrl = webhookData.generated_image_url || webhookData.url?.[0] || webhookData.image_url || null;
-            extractedVideoUrl = webhookData.generated_video_url || webhookData.video_url || null;
-            console.log('Extracted from object - Text:', extractedText ? 'YES' : 'NO', 'Image URL:', extractedImageUrl, 'Video URL:', extractedVideoUrl);
-          }
+          extractedText = webhookData.generated_text || null;
+          extractedImageUrl = webhookData.generated_image_url || null;
+          extractedVideoUrl = webhookData.generated_video_url || null;
+
+          console.log('Extracted from edge function - Text:', extractedText ? 'YES' : 'NO', 'Image URL:', extractedImageUrl, 'Video URL:', extractedVideoUrl);
 
           if (extractedText && typeof extractedText === 'string') {
             extractedText = extractedText.replace(/^["'\s]+|["'\s]+$/g, '').trim();
@@ -434,76 +425,15 @@ function ContentBlueprintPage() {
           console.log('Generated Image URL:', extractedImageUrl);
           console.log('Generated Video URL:', extractedVideoUrl);
 
-          let supabaseImageUrl = extractedImageUrl;
-
-          if (extractedImageUrl && user?.id) {
-            console.log('=== UPLOADING IMAGE TO SUPABASE ===');
-            console.log('Conditions met: extractedImageUrl exists and user ID is present');
-            const uploadedUrl = await uploadImageToSupabase(extractedImageUrl, user.id);
-            if (uploadedUrl) {
-              supabaseImageUrl = uploadedUrl;
-              console.log('Successfully uploaded image to Supabase storage');
-            } else {
-              console.warn('Failed to upload image to Supabase, using original URL as fallback');
-            }
-          } else {
-            if (!extractedImageUrl) {
-              console.warn('No image URL extracted from webhook response - skipping upload');
-            }
-            if (!user?.id) {
-              console.error('User ID not available - cannot upload to Supabase');
-            }
-          }
-
           setGeneratedText(extractedText);
-          setGeneratedImageUrl(supabaseImageUrl);
+          setGeneratedImageUrl(extractedImageUrl);
           setGeneratedVideoUrl(extractedVideoUrl);
 
-          if (draftId) {
-            if (extractedText || supabaseImageUrl || extractedVideoUrl) {
-              console.log('=== UPDATING DATABASE ===');
-              console.log('Draft ID:', draftId);
-
-              const updateData: any = {
-                generated_text: extractedText,
-                generated_at: new Date().toISOString(),
-                status: 'content_generated',
-              };
-
-              if (contentDraft.assetSource === 'Upload My Own') {
-                updateData.is_media_ready = true;
-              }
-
-              if (contentDraft.format === 'Image + Text') {
-                updateData.generated_image_url = supabaseImageUrl;
-              }
-
-              if (contentDraft.format === 'Video Post') {
-                updateData.generated_video_url = extractedVideoUrl;
-              }
-
-              console.log('Update data:', updateData);
-
-              const { data: updateResult, error: updateError } = await supabase
-                .from('content_drafts')
-                .update(updateData)
-                .eq('id', draftId)
-                .select();
-
-              if (updateError) {
-                console.error('❌ DATABASE UPDATE FAILED:', updateError);
-              } else {
-                console.log('✅ DATABASE UPDATE SUCCESS:', updateResult);
-                if (contentDraft.assetSource === 'Upload My Own' && updateResult && updateResult[0]) {
-                  setIsMediaReady(true);
-                }
-              }
-            } else {
-              console.warn('⚠️ No generated content found in webhook response - database not updated');
-            }
-          } else {
-            console.error('❌ No draft ID available for update');
+          if (contentDraft.assetSource === 'Upload My Own') {
+            setIsMediaReady(true);
           }
+
+          console.log('✅ Content received from edge function and database updated automatically');
         } else {
           const errorText = await webhookResponse.text();
           console.error('❌ Webhook returned non-OK status:', webhookResponse.status);
