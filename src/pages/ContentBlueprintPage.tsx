@@ -647,6 +647,84 @@ function ContentBlueprintPage() {
     }
   };
 
+  const handleTestWebhook = async () => {
+    if (!isFormValid()) {
+      setError('Please fill in all required fields before testing');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      if (!user?.id) {
+        throw new Error('User not authenticated');
+      }
+
+      const campaignId = crypto.randomUUID();
+      const testDraftId = crypto.randomUUID();
+
+      const webhookPayload = {
+        user_id: user.id,
+        email: user.email,
+        created_at: new Date().toISOString(),
+        campaign_name: contentDraft.campaignName.trim(),
+        campaign_id: campaignId,
+        idea: contentDraft.idea.trim(),
+        platform: contentDraft.platform,
+        format: contentDraft.format,
+        asset_source: contentDraft.format === 'Text Only' ? null : contentDraft.assetSource,
+        asset_file_name: contentDraft.assetFile?.name || null,
+        draft_id: testDraftId,
+      };
+
+      console.log('=== TEST WEBHOOK REQUEST ===');
+      console.log('Test Webhook URL: https://myaistaff.app.n8n.cloud/webhook-test/PostBluePrint');
+      console.log('Payload:', JSON.stringify(webhookPayload, null, 2));
+
+      const webhookResponse = await fetch('https://myaistaff.app.n8n.cloud/webhook-test/PostBluePrint', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(webhookPayload),
+      });
+
+      console.log('Test Webhook Response Status:', webhookResponse.status);
+      console.log('Test Webhook Response OK:', webhookResponse.ok);
+      console.log('Test Webhook Response Headers:', Object.fromEntries(webhookResponse.headers.entries()));
+
+      const responseText = await webhookResponse.text();
+      console.log('Test Webhook Raw Response:', responseText);
+
+      if (webhookResponse.ok) {
+        if (responseText) {
+          try {
+            const responseData = JSON.parse(responseText);
+            console.log('Test Webhook Parsed Response:', JSON.stringify(responseData, null, 2));
+            setSuccess(`Test successful! Response received. Check browser console for details.`);
+          } catch (e) {
+            console.log('Response is not JSON');
+            setSuccess(`Test successful! Status: ${webhookResponse.status}. Response: ${responseText || '(empty)'}`);
+          }
+        } else {
+          setSuccess(`Test successful! Status: ${webhookResponse.status}. Response body is empty.`);
+        }
+      } else {
+        setError(`Test failed with status ${webhookResponse.status}: ${responseText}`);
+      }
+
+      console.log('=== TEST WEBHOOK REQUEST END ===');
+
+    } catch (err: any) {
+      console.error('Test webhook error:', err);
+      setError(err.message || 'Test webhook request failed. Check console for details.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleRegenerate = async () => {
     if (!submittedCampaignName || !submittedIdea) {
       setError('Cannot regenerate: missing original content information');
@@ -1117,6 +1195,25 @@ function ContentBlueprintPage() {
                   <>
                     Generate Content Draft
                     <CheckCircle2 className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                  </>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={handleTestWebhook}
+                disabled={!isFormValid() || loading || waitingForWebhook}
+                className="group w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 disabled:from-slate-400 disabled:to-slate-400 disabled:cursor-not-allowed text-white py-4 rounded-lg font-semibold transition-all hover:shadow-xl hover:shadow-blue-500/30 flex items-center justify-center gap-2"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Testing...
+                  </>
+                ) : (
+                  <>
+                    Test Webhook
+                    <Bot className="w-5 h-5 group-hover:scale-110 transition-transform" />
                   </>
                 )}
               </button>
