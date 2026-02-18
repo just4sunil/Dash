@@ -1202,20 +1202,11 @@ function ContentBlueprintPage() {
               <button
                 type="button"
                 onClick={handleTestWebhook}
-                disabled={!isFormValid() || loading || waitingForWebhook}
-                className="group w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 disabled:from-slate-400 disabled:to-slate-400 disabled:cursor-not-allowed text-white py-4 rounded-lg font-semibold transition-all hover:shadow-xl hover:shadow-blue-500/30 flex items-center justify-center gap-2"
+                disabled={true}
+                className="group w-full bg-gradient-to-r from-slate-400 to-slate-400 cursor-not-allowed text-white py-4 rounded-lg font-semibold transition-all flex items-center justify-center gap-2 opacity-50"
               >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    Testing...
-                  </>
-                ) : (
-                  <>
-                    Test Webhook
-                    <Bot className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                  </>
-                )}
+                Test Webhook (Disabled)
+                <Bot className="w-5 h-5" />
               </button>
 
               <p className="text-sm text-slate-500 text-center">
